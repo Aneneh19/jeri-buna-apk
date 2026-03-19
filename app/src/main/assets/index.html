@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="am">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ጄሪ ቡና</title>
+<meta name="theme-color" content="#3a1f0a">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+Ethiopic:wght@400;600;700;900&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{
+  --primary:#5C3317;--primary-dark:#3a1f0a;
+  --accent:#D4A017;--accent-light:#F0C040;
+  --bg:#FDF6EC;--surface:#fff;--surface-warm:#FFF8F0;
+  --success:#2d8a4e;--error:#c0392b;--warning:#e67e22;--info:#2980b9;
+  --text:#1a0d00;--text-sec:#6b4c2a;--text-muted:#a68460;
+  --border:#E8D5B7;--border-light:#F5ECD8;
+}
+body{font-family:'Noto Serif Ethiopic',Georgia,serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+.screen{display:none;flex-direction:column;min-height:100vh;padding-bottom:70px;}
+.screen.active{display:flex;}
+.header{background:var(--primary-dark);padding:50px 16px 16px;display:flex;justify-content:space-between;align-items:flex-end;position:sticky;top:0;z-index:100;}
+.header-title{font-size:22px;font-weight:900;color:#fff;}
+.header-sub{font-size:13px;color:var(--accent-light);margin-top:2px;}
+.accent-btn{background:var(--accent);color:var(--primary-dark);font-weight:700;font-size:13px;border:none;padding:8px 16px;border-radius:30px;cursor:pointer;font-family:inherit;}
+.scroll-content{padding:16px;padding-bottom:20px;flex:1;overflow-y:auto;}
+.card{background:var(--surface);border-radius:14px;padding:16px;box-shadow:0 2px 8px rgba(92,51,23,0.1);margin-bottom:12px;}
+.hero-card{background:var(--primary);color:#fff;border-radius:14px;padding:20px;margin-bottom:12px;}
+.hero-label{font-size:13px;color:rgba(255,255,255,0.7);margin-bottom:4px;}
+.hero-amount{font-size:34px;font-weight:900;margin-bottom:12px;}
+.hero-row{display:flex;gap:16px;}
+.hero-stat label{font-size:12px;color:rgba(255,255,255,0.6);}
+.hero-stat p{font-weight:700;font-size:15px;}
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;}
+.stat-card{background:var(--surface);border-radius:12px;padding:12px;text-align:center;box-shadow:0 2px 6px rgba(92,51,23,0.08);border-top:3px solid transparent;}
+.stat-card .icon{font-size:20px;}
+.stat-card .val{font-size:14px;font-weight:800;margin:4px 0 2px;}
+.stat-card .lbl{font-size:10px;color:var(--text-muted);}
+.section-title{font-size:16px;font-weight:700;margin-bottom:12px;}
+.customer-row{display:flex;align-items:center;padding:10px 0;border-bottom:1px solid var(--border-light);cursor:pointer;}
+.customer-row:last-child{border-bottom:none;}
+.tab-bar{position:fixed;bottom:0;left:0;right:0;background:var(--primary-dark);display:flex;height:65px;z-index:200;}
+.tab-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border:none;background:transparent;color:rgba(255,255,255,0.4);font-size:10px;font-weight:600;font-family:inherit;gap:2px;}
+.tab-item .tab-icon{font-size:22px;line-height:1;opacity:0.4;}
+.tab-item.active{color:var(--accent);}
+.tab-item.active .tab-icon{opacity:1;}
+input,textarea{font-family:inherit;font-size:15px;color:var(--text);background:var(--surface-warm);border:1px solid var(--border);border-radius:12px;padding:14px;width:100%;outline:none;-webkit-appearance:none;}
+input:focus,textarea:focus{border-color:var(--primary);}
+.input-label{font-size:13px;font-weight:600;color:var(--text-sec);margin-bottom:4px;margin-top:12px;display:block;}
+.btn-primary{background:var(--primary);color:#fff;border:none;border-radius:12px;padding:16px;font-size:16px;font-weight:800;width:100%;cursor:pointer;font-family:inherit;margin-top:12px;}
+.btn-success{background:var(--success);color:#fff;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:700;flex:1;cursor:pointer;font-family:inherit;}
+.btn-cancel{background:#fff;color:var(--text-sec);border:1px solid var(--border);border-radius:12px;padding:14px;font-size:15px;font-weight:600;flex:1;cursor:pointer;font-family:inherit;}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:300;align-items:flex-end;}
+.modal-overlay.open{display:flex;}
+.modal-box{background:#fff;border-radius:24px 24px 0 0;padding:24px;padding-bottom:40px;width:100%;max-height:90vh;overflow-y:auto;}
+.modal-title{font-size:20px;font-weight:800;text-align:center;margin-bottom:12px;}
+.selector{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;margin-bottom:4px;}
+.selector .placeholder{color:var(--text-muted);}
+.selector .selected{color:var(--text);font-weight:600;}
+.dropdown{background:#fff;border:1px solid var(--border);border-radius:12px;margin-bottom:8px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.1);}
+.drop-item{display:flex;align-items:center;padding:14px 16px;border-bottom:1px solid var(--border-light);cursor:pointer;}
+.drop-item:last-child{border-bottom:none;}
+.drop-item.active-sel{background:var(--surface-warm);}
+.qty-row{display:flex;align-items:center;gap:12px;margin-bottom:8px;}
+.qty-btn{width:44px;height:44px;border-radius:50%;background:var(--primary);color:#fff;border:none;font-size:22px;font-weight:700;cursor:pointer;flex-shrink:0;}
+.qty-input{flex:1;text-align:center;font-size:22px;font-weight:700;}
+.tx-card{background:#fff;border-radius:12px;padding:14px;margin-bottom:8px;display:flex;align-items:center;box-shadow:0 2px 6px rgba(92,51,23,0.08);}
+.tx-dot{width:10px;height:10px;border-radius:50%;margin-right:10px;flex-shrink:0;}
+.tx-info{flex:1;}
+.tx-name{font-size:15px;font-weight:700;}
+.tx-meta{font-size:12px;color:var(--text-muted);}
+.tx-amt{font-size:15px;font-weight:800;flex-shrink:0;margin-right:8px;}
+.del-btn{background:#fff0f0;border:1px solid #ffcccc;color:var(--error);border-radius:10px;padding:8px 10px;font-size:18px;cursor:pointer;flex-shrink:0;}
+.balance-badge{display:inline-block;padding:6px 20px;border-radius:30px;color:#fff;font-weight:700;font-size:14px;margin-top:10px;}
+.profile-card{text-align:center;background:#fff;border-radius:14px;padding:24px;margin-bottom:12px;box-shadow:0 2px 8px rgba(92,51,23,0.1);}
+.profile-avatar{width:90px;height:90px;border-radius:50%;margin:0 auto 12px;object-fit:cover;display:block;}
+.profile-avatar-init{width:90px;height:90px;border-radius:50%;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:40px;font-weight:700;color:#fff;}
+.summary-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;}
+.summary-box{background:#fff;border-radius:10px;padding:10px;text-align:center;box-shadow:0 2px 6px rgba(92,51,23,0.08);}
+.summary-val{font-size:13px;font-weight:800;}
+.summary-lbl{font-size:10px;color:var(--text-muted);margin-top:2px;}
+.search-box{display:flex;align-items:center;background:#fff;margin:12px;border-radius:30px;padding:0 16px;box-shadow:0 2px 6px rgba(92,51,23,0.08);}
+.search-box input{border:none;background:transparent;padding:12px 8px;}
+.empty-state{text-align:center;padding:60px 20px;}
+.total-card{background:#fff;border-radius:12px;padding:14px;margin-top:12px;border:1px solid var(--border);}
+.total-row{display:flex;justify-content:space-between;padding:4px 0;font-size:14px;}
+.grand-row{border-top:1px solid var(--border);margin-top:8px;padding-top:8px;display:flex;justify-content:space-between;}
+.back-btn{background:none;border:none;color:var(--accent-light);font-size:15px;cursor:pointer;font-family:inherit;padding:0;}
+.compare-bar{display:flex;height:30px;border-radius:8px;overflow:hidden;margin-bottom:8px;}
+.compare-seg{display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;min-width:30px;}
+.hint{text-align:center;font-size:12px;color:var(--text-muted);margin-top:8px;padding-bottom:8px;}
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:10px 20px;border-radius:30px;font-size:14px;z-index:500;opacity:0;transition:opacity 0.3s;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;}
+.photo-pick{display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--surface-warm);border:2px dashed var(--border);border-radius:14px;padding:20px;cursor:pointer;margin-top:8px;}
+.settings-row{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid var(--border-light);}
+.settings-row:last-child{border-bottom:none;}
+.settings-label{font-size:15px;font-weight:600;}
+.settings-sub{font-size:12px;color:var(--text-muted);margin-top:2px;}
+.tg-status{display:inline-block;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;margin-top:8px;}
+.tg-status.ok{background:#d4edda;color:#155724;}
+.tg-status.err{background:#f8d7da;color:#721c24;}
+.tg-status.idle{background:#e2e3e5;color:#383d41;}
+/* Coffee smoke */
+.coffee-scene{display:flex;justify-content:center;margin:8px 0 -4px;}
+.coffee-cup-wrap{position:relative;display:inline-block;text-align:center;}
+.smoke-container{position:absolute;top:-44px;left:50%;transform:translateX(-50%);width:50px;height:44px;pointer-events:none;}
+.smoke{position:absolute;bottom:0;border-radius:50% 50% 20% 20%;background:rgba(255,255,255,0.55);animation:smokerise 2.5s infinite ease-out;}
+.smoke:nth-child(1){width:8px;left:6px;animation-delay:0s;animation-duration:2.3s;}
+.smoke:nth-child(2){width:10px;left:18px;animation-delay:0.7s;animation-duration:2.8s;}
+.smoke:nth-child(3){width:7px;left:32px;animation-delay:1.3s;animation-duration:2.1s;}
+@keyframes smokerise{
+  0%{height:0;opacity:0;transform:translateX(0) scaleX(1);}
+  20%{opacity:0.7;}
+  60%{transform:translateX(-5px) scaleX(1.4);opacity:0.4;}
+  100%{height:42px;opacity:0;transform:translateX(3px) scaleX(0.7);}
+}
+/* Undo toast */
+.undo-bar{position:fixed;bottom:80px;left:16px;right:16px;background:#1a0d00;color:#fff;padding:12px 16px;border-radius:14px;font-size:14px;z-index:600;display:flex;align-items:center;justify-content:space-between;box-shadow:0 4px 20px rgba(0,0,0,0.3);transition:opacity 0.3s;}
+.undo-bar.hidden{display:none;}
+.undo-btn{background:var(--accent);color:var(--primary-dark);border:none;border-radius:20px;padding:6px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+.pin-input{font-size:28px;text-align:center;letter-spacing:8px;font-weight:800;}
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+<div class="undo-bar hidden" id="undoBar">
+  <span id="undoMsg">ተሰርዟል</span>
+  <button class="undo-btn" onclick="undoDelete()">↩ መልስ</button>
+</div>
+
+<nav class="tab-bar" id="tabBar">
+  <button class="tab-item active" onclick="navTo('dashboard')" id="tab-dashboard"><span class="tab-icon">🏠</span><span>መዝገብ</span></button>
+  <button class="tab-item" onclick="navTo('customers')" id="tab-customers"><span class="tab-icon">👥</span><span>ደንበኞች</span></button>
+  <button class="tab-item" onclick="navTo('reports')" id="tab-reports"><span class="tab-icon">📊</span><span>ሪፖርቶች</span></button>
+  <button class="tab-item" onclick="navTo('settings')" id="tab-settings"><span class="tab-icon">⚙️</span><span>ቅንብር</span></button>
+</nav>
+
+<!-- DASHBOARD -->
+<div class="screen active" id="screen-dashboard">
+  <div class="header">
+    <div style="display:flex;align-items:center;gap:10px">
+      <svg width="38" height="38" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="50" cy="68" rx="22" ry="18" fill="#b0956b"/>
+        <circle cx="50" cy="44" r="20" fill="#c4a87a"/>
+        <circle cx="33" cy="26" r="13" fill="#c4a87a"/>
+        <circle cx="67" cy="26" r="13" fill="#c4a87a"/>
+        <circle cx="33" cy="26" r="8" fill="#e8a0a0"/>
+        <circle cx="67" cy="26" r="8" fill="#e8a0a0"/>
+        <circle cx="43" cy="42" r="4" fill="#1a0d00"/>
+        <circle cx="57" cy="42" r="4" fill="#1a0d00"/>
+        <circle cx="44.5" cy="40.5" r="1.5" fill="white"/>
+        <circle cx="58.5" cy="40.5" r="1.5" fill="white"/>
+        <ellipse cx="50" cy="50" rx="3" ry="2" fill="#e87070"/>
+        <line x1="52" y1="50" x2="68" y2="46" stroke="#7a5c30" stroke-width="1.2" stroke-linecap="round"/>
+        <line x1="52" y1="51" x2="68" y2="52" stroke="#7a5c30" stroke-width="1.2" stroke-linecap="round"/>
+        <line x1="48" y1="50" x2="32" y2="46" stroke="#7a5c30" stroke-width="1.2" stroke-linecap="round"/>
+        <line x1="48" y1="51" x2="32" y2="52" stroke="#7a5c30" stroke-width="1.2" stroke-linecap="round"/>
+        <path d="M44 54 Q50 59 56 54" stroke="#7a5c30" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <path d="M28 65 Q18 60 20 72" stroke="#b0956b" stroke-width="6" fill="none" stroke-linecap="round"/>
+        <path d="M72 65 Q82 60 80 72" stroke="#b0956b" stroke-width="6" fill="none" stroke-linecap="round"/>
+        <rect x="36" y="72" width="28" height="18" rx="4" fill="#D4A017"/>
+        <path d="M44 70 Q42 65 44 62" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.8"/>
+        <path d="M50 69 Q48 63 50 60" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.8"/>
+        <path d="M56 70 Q54 65 56 62" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.8"/>
+        <path d="M64 76 Q72 79 64 84" stroke="#D4A017" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <rect x="38" y="76" width="24" height="3" fill="#2e7d32"/>
+        <rect x="38" y="79" width="24" height="3" fill="#f9c20a"/>
+        <rect x="38" y="82" width="24" height="3" fill="#c62828"/>
+        <path d="M72 78 Q88 74 86 88" stroke="#b0956b" stroke-width="3" fill="none" stroke-linecap="round"/>
+      </svg>
+      <div><div class="header-title">ጄሪ ቡና</div><div class="header-sub" id="dash-date"></div></div>
+    </div>
+    <button class="accent-btn" onclick="navTo('addTx')">+ ዕዳ ጨምር</button>
+  </div>
+  <div class="coffee-scene">
+    <div class="coffee-cup-wrap">
+      <div class="smoke-container">
+        <div class="smoke"></div>
+        <div class="smoke"></div>
+        <div class="smoke"></div>
+      </div>
+      <svg width="60" height="52" viewBox="0 0 60 52" xmlns="http://www.w3.org/2000/svg">
+        <path d="M8 18 L52 18 L46 48 Q45 50 43 50 L17 50 Q15 50 14 48 Z" fill="#D4A017"/>
+        <rect x="14" y="24" width="32" height="5" fill="#2e7d32" rx="1"/>
+        <rect x="13" y="29" width="33" height="5" fill="#f9c20a" rx="1"/>
+        <rect x="12" y="34" width="34" height="5" fill="#c62828" rx="1"/>
+        <rect x="6" y="14" width="48" height="6" rx="3" fill="#b8860b"/>
+        <ellipse cx="30" cy="51" rx="26" ry="4" fill="#b8860b" opacity="0.6"/>
+        <path d="M52 22 Q64 28 64 36 Q64 44 52 44" stroke="#D4A017" stroke-width="4" fill="none" stroke-linecap="round"/>
+        <ellipse cx="30" cy="20" rx="20" ry="3" fill="#5C3317" opacity="0.6"/>
+      </svg>
+    </div>
+  </div>
+  <div class="scroll-content" id="dash-content"></div>
+</div>
+
+<!-- CUSTOMERS -->
+<div class="screen" id="screen-customers">
+  <div class="header">
+    <div class="header-title">👥 ደንበኞች</div>
+    <button class="accent-btn" onclick="openAddCustomer()">+ አዲስ</button>
+  </div>
+  <div class="search-box"><span>🔍</span><input type="text" id="custSearch" placeholder="ደንበኛ ፈልግ..." oninput="renderCustomers()"></div>
+  <div class="scroll-content" id="cust-list"></div>
+</div>
+
+<!-- ADD TRANSACTION -->
+<div class="screen" id="screen-addTx">
+  <div class="header">
+    <button class="back-btn" onclick="goBack()">← ተመለስ</button>
+    <div><div class="header-title">ዕዳ ጨምር</div><div class="header-sub" id="addtx-date"></div></div>
+    <div style="width:60px"></div>
+  </div>
+  <div class="scroll-content">
+    <label class="input-label">ደንበኛ ምረጥ</label>
+    <div class="selector" onclick="toggleDD('custDD')"><span id="selCustText" class="placeholder">ደንበኛ ይምረጡ...</span><span>▼</span></div>
+    <div class="dropdown" id="custDD" style="display:none"></div>
+    <label class="input-label">እቃ ምረጥ</label>
+    <div class="selector" onclick="toggleDD('itemDD')"><span id="selItemText" class="placeholder">እቃ ይምረጡ...</span><span>▼</span></div>
+    <div class="dropdown" id="itemDD" style="display:none"></div>
+    <div id="cashSection" style="display:none">
+      <label class="input-label">የጥሬ ብር መጠን</label>
+      <input type="number" id="cashAmt" placeholder="ብር" min="1" oninput="updateTotal()">
+    </div>
+    <div id="qtySection" style="display:none">
+      <label class="input-label">ብዛት</label>
+      <div class="qty-row">
+        <button class="qty-btn" onclick="changeQty(-1)">-</button>
+        <input type="number" class="qty-input" id="qtyInput" value="1" min="1" oninput="updateTotal()">
+        <button class="qty-btn" onclick="changeQty(1)">+</button>
+      </div>
+    </div>
+    <label class="input-label">ማስታወሻ (አማራጭ)</label>
+    <textarea id="txNote" placeholder="ማስታወሻ..." style="height:70px;resize:none"></textarea>
+    <div class="total-card" id="totalCard" style="display:none">
+      <div class="total-row"><span style="color:var(--text-muted)">ደንበኛ</span><span id="tot-cust" style="font-weight:600">-</span></div>
+      <div class="total-row"><span style="color:var(--text-muted)">እቃ</span><span id="tot-item" style="font-weight:600">-</span></div>
+      <div class="total-row" id="tot-qty-row"><span style="color:var(--text-muted)">ብዛት</span><span id="tot-qty" style="font-weight:600">-</span></div>
+      <div class="total-row"><span style="color:var(--text-muted)">የ1 ዋጋ</span><span id="tot-unit" style="font-weight:600">-</span></div>
+      <div class="grand-row"><span style="font-size:18px;font-weight:800">ጠቅላላ</span><span id="tot-grand" style="font-size:22px;font-weight:900;color:var(--primary)">0 ብር</span></div>
+    </div>
+    <button class="btn-primary" onclick="saveTx()">💾 ዕዳ ምዝግብ</button>
+  </div>
+</div>
+
+<!-- STATEMENT -->
+<div class="screen" id="screen-statement">
+  <div class="header">
+    <button class="back-btn" onclick="goBack()">← ተመለስ</button>
+    <div class="header-title" id="stmt-title">ሒሳብ</div>
+    <div style="width:60px"></div>
+  </div>
+  <div class="scroll-content" id="stmt-content"></div>
+</div>
+
+<!-- REPORTS -->
+<div class="screen" id="screen-reports">
+  <div class="header"><div><div class="header-title">📊 ሪፖርቶች</div><div class="header-sub" id="rep-date"></div></div></div>
+  <div class="scroll-content" id="rep-content"></div>
+</div>
+
+<!-- SETTINGS -->
+<div class="screen" id="screen-settings">
+  <div class="header"><div><div class="header-title">⚙️ ቅንብሮች</div><div class="header-sub">Telegram & ምትኬ</div></div></div>
+  <div class="scroll-content">
+    <div class="card">
+      <div class="section-title">📱 Telegram ቅንብር</div>
+      <label class="input-label">Bot Token</label>
+      <input type="text" id="cfg-token" placeholder="1234567890:ABCdef..." autocomplete="off" style="font-size:13px">
+      <label class="input-label">Chat ID</label>
+      <input type="text" id="cfg-chatid" placeholder="-100123456789 ወይም 123456789">
+      <div style="display:flex;gap:10px;margin-top:16px">
+        <button class="btn-cancel" onclick="testTelegram()" style="flex:1;font-size:13px">🔔 ሙከራ ላክ</button>
+        <button class="btn-success" onclick="saveTelegramCfg()">💾 አስቀምጥ</button>
+      </div>
+      <div id="tg-status-badge" style="text-align:center;margin-top:12px"></div>
+    </div>
+    <div class="card">
+      <div class="section-title">🕛 ዕለታዊ ሪፖርት</div>
+      <div class="settings-row">
+        <div><div class="settings-label">ሪፖርት ሰዓት</div><div class="settings-sub">ሌሊት 12:00 - ራስ-ሰር</div></div>
+        <span style="font-size:26px">🕛</span>
+      </div>
+      <div class="settings-row">
+        <div><div class="settings-label">የመጨረሻ ሪፖርት</div><div class="settings-sub" id="last-sent-text">ገና አልተላከም</div></div>
+      </div>
+      <button class="btn-primary" onclick="sendManualReport()" style="margin-top:4px">📤 አሁን ሪፖርት ላክ</button>
+    </div>
+    <div class="card">
+      <div class="section-title">💾 መረጃ ምትኬ</div>
+      <button class="btn-success" onclick="exportBackup()" style="width:100%;margin-bottom:10px">📤 Export - ምትኬ አስቀምጥ</button>
+      <input type="file" id="importFile" accept=".json" style="display:none" onchange="importBackup(this)">
+      <button class="btn-cancel" onclick="document.getElementById('importFile').click()" style="width:100%">📥 Import - ምትኬ ጫን</button>
+    </div>
+    <div class="card" style="border-left:4px solid var(--error)">
+      <div class="section-title" style="color:var(--error)">🗑️ ሁሉንም ሰርዝ</div>
+      <div style="font-size:13px;color:var(--text-muted);margin-bottom:12px">ሁሉም ደንበኞች፣ ዕዳ እና ክፍያ ይሰረዛሉ!</div>
+      <button onclick="openResetModal()" style="background:var(--error);color:#fff;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:700;width:100%;cursor:pointer;font-family:inherit">🗑️ ሁሉንም ሰርዝ</button>
+    </div>
+    <div class="card" style="font-size:13px;color:var(--text-muted);line-height:1.9">
+      <div style="font-weight:700;color:var(--text-sec);margin-bottom:8px;font-size:14px">📋 Bot አወቃቀር</div>
+      1️⃣ Telegram ላይ @BotFather ይፈልጉ<br>
+      2️⃣ /newbot ብለው አዲስ bot ይፍጠሩ<br>
+      3️⃣ Bot token ቀዳጁን ቀዳጅ ይቅዱ<br>
+      4️⃣ Bot ጋር ይጀምሩ (/start)<br>
+      5️⃣ @userinfobot ወዳ ሂደው Chat ID ያግኙ<br>
+      6️⃣ ላይ ያለዉን ቅጽ ሞልተው 💾 ያስቀምጡ
+    </div>
+  </div>
+</div>
+
+<!-- PIN MODAL -->
+<div class="modal-overlay" id="pinModal">
+  <div class="modal-box">
+    <div class="modal-title">🔐 PIN ያስፈልጋል</div>
+    <div style="color:var(--text-muted);text-align:center;margin-bottom:16px">ሁሉንም ለመሰረዝ PIN ያስፈልጋል</div>
+    <input type="password" id="pinInput" class="pin-input" placeholder="••••" maxlength="4">
+    <div style="display:flex;gap:10px;margin-top:20px">
+      <button class="btn-cancel" onclick="closeModal('pinModal')">ሰርዝ</button>
+      <button class="btn-success" onclick="confirmReset()">✅ አረጋግጥ</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD CUSTOMER MODAL -->
+<div class="modal-overlay" id="addCustModal">
+  <div class="modal-box">
+    <div class="modal-title">አዲስ ደንበኛ ጨምር</div>
+    <div class="photo-pick" onclick="document.getElementById('photoInput').click()">
+      <img id="photoPreview" src="" style="display:none;width:80px;height:80px;border-radius:50%;object-fit:cover;margin-bottom:8px">
+      <div id="photoIcon" style="font-size:48px;margin-bottom:8px">📷</div>
+      <div style="font-size:13px;color:var(--text-muted)">ፎቶ ለመምረጥ ይጫኑ (አማራጭ)</div>
+    </div>
+    <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="previewPhoto(this)">
+    <label class="input-label">ሙሉ ስም *</label>
+    <input type="text" id="nc-name" placeholder="ለምሳሌ: አቤቤ ጌታ">
+    <div style="display:flex;gap:10px;margin-top:20px">
+      <button class="btn-cancel" onclick="closeModal('addCustModal')">ሰርዝ</button>
+      <button class="btn-success" onclick="saveCustomer()">ጨምር</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD PAYMENT MODAL -->
+<div class="modal-overlay" id="addPayModal">
+  <div class="modal-box">
+    <div class="modal-title">💳 ክፍያ ምዝግብ</div>
+    <div style="color:var(--text-muted);text-align:center;margin-bottom:16px" id="payModalSub"></div>
+    <label class="input-label">የክፍያ መጠን (ብር)</label>
+    <input type="number" id="payAmt" placeholder="100" min="1">
+    <label class="input-label">ማስታወሻ (አማራጭ)</label>
+    <input type="text" id="payNote" placeholder="ማስታወሻ...">
+    <div style="display:flex;gap:10px;margin-top:20px">
+      <button class="btn-cancel" onclick="closeModal('addPayModal')">ሰርዝ</button>
+      <button class="btn-success" onclick="savePayment()">አስቀምጥ</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══ ETHIOPIAN CALENDAR ═══
+var ETH_MONTHS=['መስከረም','ጥቅምት','ህዳር','ታህሳስ','ጥር','የካቲት','መጋቢት','ሚያዚያ','ግንቦት','ሰኔ','ሐምሌ','ነሐሴ','ጳጉሜ'];
+var ETH_DAYS=['እሁድ','ሰኞ','ማክሰኞ','ረቡዕ','ሐሙስ','አርብ','ቅዳሜ'];
+function gregToJD(y,m,d){var a=Math.floor((14-m)/12),yr=y+4800-a,mo=m+12*a-3;return d+Math.floor((153*mo+2)/5)+365*yr+Math.floor(yr/4)-Math.floor(yr/100)+Math.floor(yr/400)-32045;}
+function toEthDate(date){var jd=gregToJD(date.getFullYear(),date.getMonth()+1,date.getDate());var r=(jd-1723856)%1461,n=r%365+365*Math.floor(r/1460);var yr=4*Math.floor((jd-1723856)/1461)+Math.floor(r/365)-Math.floor(r/1460);var mo=Math.floor(n/30)+1,dy=(n%30)+1;return{year:yr,month:mo,day:dy,monthName:ETH_MONTHS[mo-1]||'ጳጉሜ'};}
+function ethStr(date){var e=toEthDate(date);return e.monthName+' '+e.day+', '+e.year;}
+function ethStrFull(date){var e=toEthDate(date);return ETH_DAYS[date.getDay()]+', '+e.monthName+' '+e.day+', '+e.year;}
+function nowEth(){return ethStr(new Date());}
+function nowEthFull(){return ethStrFull(new Date());}
+
+// ═══ STORAGE ═══
+function getData(k){try{var d=localStorage.getItem(k);return d?JSON.parse(d):[]}catch(e){return[];}}
+function setData(k,v){localStorage.setItem(k,JSON.stringify(v));}
+function getKV(k,def){try{var d=localStorage.getItem(k);return d!==null?JSON.parse(d):def;}catch(e){return def;}}
+function setKV(k,v){localStorage.setItem(k,JSON.stringify(v));}
+function getCustomers(){return getData('customers');}
+function getTransactions(){return getData('transactions');}
+function getPayments(){return getData('payments');}
+
+// ═══ BALANCE HELPER ═══
+function getCustBalance(custId){
+  var debt=getTransactions().filter(function(t){return t.custId===custId;}).reduce(function(s,t){return s+t.total;},0);
+  var paid=getPayments().filter(function(p){return p.custId===custId;}).reduce(function(s,p){return s+p.amount;},0);
+  return{debt:debt,paid:paid,balance:debt-paid};
+}
+
+// ═══ AUTO BACKUP ═══
+function autoBackup(){
+  var data={customers:getCustomers(),transactions:getTransactions(),payments:getPayments(),ts:Date.now(),ethDate:nowEthFull()};
+  localStorage.setItem('auto_backup',JSON.stringify(data));
+}
+setInterval(autoBackup,6*60*60*1000);
+
+// ═══ MENU ═══
+var MENU=[
+  {id:'bunna',name:'ቡና',price:30,emoji:'☕',isCash:false},
+  {id:'shay',name:'ሻይ',price:20,emoji:'🍵',isCash:false},
+  {id:'leslasa',name:'ለስላሳ',price:40,emoji:'🥤',isCash:false},
+  {id:'areke_m',name:'አረቄ (1 መለኪያ)',price:15,emoji:'🥃',isCash:false},
+  {id:'areke_b',name:'አረቄ (1 ባጃጅ)',price:75,emoji:'🍶',isCash:false},
+  {id:'sig_ny',name:'ሲጋራ (ኒያላ)',price:10,emoji:'🚬',isCash:false},
+  {id:'sig_sh',name:'ሲጋራ (ሻምላን)',price:7,emoji:'🚬',isCash:false},
+  {id:'cash',name:'ጥሬ ብር',price:0,emoji:'💵',isCash:true},
+];
+
+// ═══ NAVIGATION ═══
+var _navStack=['dashboard'];
+var TABS=['dashboard','customers','reports','settings'];
+
+function navTo(id){
+  if(TABS.indexOf(id)>-1){
+    _navStack=[id];
+    showScreen(id);
+    document.querySelectorAll('.tab-item').forEach(function(t){t.classList.remove('active');});
+    var tb=document.getElementById('tab-'+id);
+    if(tb)tb.classList.add('active');
+    if(id==='dashboard')renderDashboard();
+    if(id==='customers')renderCustomers();
+    if(id==='reports')renderReports();
+    if(id==='settings')renderSettings();
+  } else {
+    _navStack.push(id);
+    showScreen(id);
+    if(id==='addTx')initAddTx();
+    if(id==='statement')renderStatement();
+  }
+  history.pushState({screen:id},'','#'+id);
+}
+
+function goBack(){
+  if(_navStack.length>1){
+    _navStack.pop();
+    var prev=_navStack[_navStack.length-1];
+    showScreen(prev);
+    document.querySelectorAll('.tab-item').forEach(function(t){t.classList.remove('active');});
+    if(TABS.indexOf(prev)>-1){
+      var tb=document.getElementById('tab-'+prev);
+      if(tb)tb.classList.add('active');
+      if(prev==='dashboard')renderDashboard();
+      if(prev==='customers')renderCustomers();
+      if(prev==='reports')renderReports();
+      if(prev==='settings')renderSettings();
+    }
+    history.pushState({screen:prev},'','#'+prev);
+  } else {
+    navTo('dashboard');
+  }
+}
+
+window.addEventListener('popstate',function(){goBack();});
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
+  document.getElementById('screen-'+id).classList.add('active');
+  document.getElementById('tabBar').style.display=(TABS.indexOf(id)>-1)?'flex':'none';
+}
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+
+// ═══ HELPERS ═══
+var ACOLORS=['#5C3317','#722F37','#2d6a4f','#1a5276','#7d3c98','#8B5A2B'];
+function aColor(n){var h=0;for(var i=0;i<n.length;i++)h+=n.charCodeAt(i);return ACOLORS[h%ACOLORS.length];}
+function avtHTML(cust,size){
+  size=size||44;
+  if(cust.photo)return '<img src="'+cust.photo+'" style="width:'+size+'px;height:'+size+'px;border-radius:50%;object-fit:cover;flex-shrink:0">';
+  return '<div style="width:'+size+'px;height:'+size+'px;border-radius:50%;background:'+aColor(cust.name)+';display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:'+(size*0.38)+'px;flex-shrink:0">'+cust.name.charAt(0)+'</div>';
+}
+function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2500);}
+
+// ═══ UNDO DELETE ═══
+var _lastDeleted=null,_lastDeleteType=null,_undoTimer=null;
+function showUndo(msg){
+  document.getElementById('undoMsg').textContent=msg;
+  document.getElementById('undoBar').classList.remove('hidden');
+  if(_undoTimer)clearTimeout(_undoTimer);
+  _undoTimer=setTimeout(function(){
+    document.getElementById('undoBar').classList.add('hidden');
+    _lastDeleted=null;
+  },5000);
+}
+function undoDelete(){
+  if(!_lastDeleted)return;
+  if(_lastDeleteType==='tx'){
+    var txns=getTransactions();txns.push(_lastDeleted);setData('transactions',txns);
+  } else {
+    var pmts=getPayments();pmts.push(_lastDeleted);setData('payments',pmts);
+  }
+  _lastDeleted=null;
+  document.getElementById('undoBar').classList.add('hidden');
+  renderStatement();renderDashboard();
+  toast('✅ ተመልሷል!');
+}
+
+// ═══ DASHBOARD ═══
+function renderDashboard(){
+  document.getElementById('dash-date').textContent=nowEthFull();
+  var custs=getCustomers(),txns=getTransactions(),pmts=getPayments();
+  var now=new Date(),todayE=toEthDate(now);
+  var totalDebt=0,todayDebt=0,monthDebt=0,custDebt={};
+  txns.forEach(function(t){
+    totalDebt+=t.total;
+    custDebt[t.custId]=(custDebt[t.custId]||0)+t.total;
+    var d=toEthDate(new Date(t.date));
+    if(d.day===todayE.day&&d.month===todayE.month&&d.year===todayE.year)todayDebt+=t.total;
+    if(d.month===todayE.month&&d.year===todayE.year)monthDebt+=t.total;
+  });
+  var totalPaid=pmts.reduce(function(s,p){return s+p.amount;},0);
+  var outstanding=totalDebt-totalPaid;
+  var topCusts=custs.map(function(c){
+    var b=getCustBalance(c.id);
+    return Object.assign({},c,{balance:b.balance,txCount:txns.filter(function(t){return t.custId===c.id;}).length});
+  }).sort(function(a,b){return b.txCount-a.txCount;}).slice(0,5);
+
+  var h='<div class="hero-card"><div class="hero-label">ጠቅላላ ያልተከፈለ ዕዳ</div>';
+  h+='<div class="hero-amount">'+outstanding.toLocaleString()+' ብር</div>';
+  h+='<div class="hero-row"><div class="hero-stat"><label>ጠቅላላ ዕዳ</label><p>'+totalDebt.toLocaleString()+' ብር</p></div>';
+  h+='<div class="hero-stat"><label>ጠቅላላ ክፍያ</label><p style="color:var(--accent-light)">'+totalPaid.toLocaleString()+' ብር</p></div></div></div>';
+  h+='<div class="stats-grid">';
+  h+='<div class="stat-card" style="border-top-color:var(--warning)"><div class="icon">📅</div><div class="val" style="color:var(--warning)">'+todayDebt.toLocaleString()+'</div><div class="lbl">የዛሬ ዕዳ</div></div>';
+  h+='<div class="stat-card" style="border-top-color:var(--info)"><div class="icon">📆</div><div class="val" style="color:var(--info)">'+monthDebt.toLocaleString()+'</div><div class="lbl">የወሩ ዕዳ</div></div>';
+  h+='<div class="stat-card" style="border-top-color:var(--success)"><div class="icon">👥</div><div class="val" style="color:var(--success)">'+custs.length+'</div><div class="lbl">ደንበኞች</div></div>';
+  h+='</div>';
+
+  // High debt warning
+  var highRisk=topCusts.filter(function(c){return c.balance>500;});
+  if(highRisk.length>0){
+    h+='<div class="card" style="border-left:4px solid var(--error);background:#fff5f5">';
+    h+='<div style="font-size:13px;font-weight:700;color:var(--error);margin-bottom:8px">⚠️ ከፍተኛ ዕዳ ያለባቸው</div>';
+    highRisk.forEach(function(c){
+      h+='<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:14px"><span>'+c.name+'</span><span style="color:var(--error);font-weight:700">'+c.balance.toLocaleString()+' ብር</span></div>';
+    });
+    h+='</div>';
+  }
+
+  if(topCusts.length>0){
+    h+='<div class="card"><div class="section-title">🏆 ንቁ ደንበኞች</div>';
+    topCusts.forEach(function(c,i){
+      h+='<div class="customer-row" onclick="openStatementNav(\''+c.id+'\')">';
+      h+='<span style="width:22px;font-size:12px;color:var(--text-muted);font-weight:700">'+(i+1)+'</span>';
+      h+=avtHTML(c,36);
+      h+='<div style="flex:1;margin-left:10px"><div style="font-size:14px;font-weight:700">'+c.name+'</div><div style="font-size:12px;color:var(--text-muted)">'+c.txCount+' ግዢዎች</div></div>';
+      h+='<span style="font-weight:800;color:'+(c.balance>0?'var(--error)':'var(--success)')+'">'+(c.balance>0?c.balance.toLocaleString():c.balance<0?'+'+Math.abs(c.balance).toLocaleString():'0')+' ብር</span></div>';
+    });
+    h+='</div>';
+  }
+  if(custs.length===0){
+    h+='<div class="empty-state"><div style="font-size:60px">☕</div><h3 style="margin:12px 0 8px;font-size:20px">እንኳን ደህና መጡ!</h3><p style="color:var(--text-muted);margin-bottom:20px">ደንበኞችን ይጨምሩ እና ዕዳ ይመዝግቡ</p>';
+    h+='<button class="accent-btn" onclick="navTo(\'customers\')" style="font-size:15px;padding:12px 24px">ደንበኛ ጨምር</button></div>';
+  }
+  document.getElementById('dash-content').innerHTML=h;
+}
+
+// ═══ CUSTOMERS ═══
+function renderCustomers(){
+  var search=(document.getElementById('custSearch').value||'').toLowerCase();
+  var custs=getCustomers();
+  var filtered=custs.filter(function(c){return c.name.toLowerCase().indexOf(search)>-1;});
+  var h='';
+  if(filtered.length===0)h='<div class="empty-state"><div style="font-size:50px">👤</div><p style="color:var(--text-muted);margin-top:12px;font-size:16px">ደንበኛ አልተጨመረም</p></div>';
+  filtered.forEach(function(c){
+    var b=getCustBalance(c.id);
+    h+='<div class="card" style="display:flex;align-items:center;cursor:pointer;margin-bottom:8px" onclick="openStatementNav(\''+c.id+'\')" ontouchstart="startLong(\''+c.id+'\',\''+c.name+'\')" ontouchend="cancelLong()" oncontextmenu="delCust(\''+c.id+'\',\''+c.name+'\');return false">';
+    h+=avtHTML(c,46);
+    h+='<div style="flex:1;margin-left:12px"><div style="font-size:16px;font-weight:700">'+c.name+'</div></div>';
+    h+='<div style="text-align:right"><div style="font-size:15px;font-weight:800;color:'+(b.balance>0?'var(--error)':'var(--success)')+'">'+( b.balance>0?b.balance.toLocaleString()+' ብር':b.balance<0?'+'+Math.abs(b.balance).toLocaleString():'ዜሮ')+'</div><div style="font-size:11px;color:var(--text-muted)">'+(b.balance>0?'ዕዳ':b.balance<0?'ብልጫ':'ሒሳብ የለም')+'</div></div></div>';
+  });
+  h+='<div class="hint">ለመሰረዝ ረዘም ያለ ጊዜ ይያዙ</div>';
+  document.getElementById('cust-list').innerHTML=h;
+}
+
+var longPressTimer=null;
+function startLong(id,name){longPressTimer=setTimeout(function(){delCust(id,name);},700);}
+function cancelLong(){if(longPressTimer){clearTimeout(longPressTimer);longPressTimer=null;}}
+
+function openAddCustomer(){
+  document.getElementById('nc-name').value='';
+  document.getElementById('photoPreview').style.display='none';
+  document.getElementById('photoIcon').style.display='block';
+  window._photoData=null;
+  openModal('addCustModal');
+}
+function previewPhoto(input){
+  if(!input.files||!input.files[0])return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var img=document.getElementById('photoPreview');
+    img.src=e.target.result;img.style.display='block';
+    document.getElementById('photoIcon').style.display='none';
+    window._photoData=e.target.result;
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+function saveCustomer(){
+  var name=document.getElementById('nc-name').value.trim();
+  if(!name){alert('ስም ያስፈልጋል');return;}
+  var custs=getCustomers();var now=new Date();
+  custs.push({id:'c_'+Date.now(),name:name,photo:window._photoData||'',createdAt:now.toISOString(),ethDate:nowEth()});
+  setData('customers',custs);
+  closeModal('addCustModal');
+  renderCustomers();renderDashboard();
+  toast('✅ '+name+' ተጨምሯል');
+}
+function delCust(id,name){
+  if(confirm(name+' ደንበኛ ሰርዝ?')){
+    setData('customers',getCustomers().filter(function(c){return c.id!==id;}));
+    renderCustomers();renderDashboard();
+    toast('🗑️ ተሰርዟል');
+  }
+}
+
+// ═══ ADD TRANSACTION ═══
+var selCustId=null,selItemId=null;
+function initAddTx(){
+  selCustId=null;selItemId=null;
+  document.getElementById('selCustText').textContent='ደንበኛ ይምረጡ...';
+  document.getElementById('selCustText').className='placeholder';
+  document.getElementById('selItemText').textContent='እቃ ይምረጡ...';
+  document.getElementById('selItemText').className='placeholder';
+  document.getElementById('qtyInput').value=1;
+  document.getElementById('cashAmt').value='';
+  document.getElementById('txNote').value='';
+  document.getElementById('cashSection').style.display='none';
+  document.getElementById('qtySection').style.display='none';
+  document.getElementById('totalCard').style.display='none';
+  document.getElementById('addtx-date').textContent=nowEthFull();
+  buildCustDD();buildItemDD();
+}
+function buildCustDD(){
+  var custs=getCustomers();var h='';
+  if(custs.length===0)h='<div style="padding:16px;color:var(--text-muted);text-align:center">ደንበኛ አልተጨመረም</div>';
+  custs.forEach(function(c){
+    h+='<div class="drop-item'+(selCustId===c.id?' active-sel':'')+'" onclick="selCust(\''+c.id+'\',\''+c.name+'\')">';
+    h+=avtHTML(c,30);h+='<span style="margin-left:10px;font-size:15px">'+c.name+'</span>';
+    if(selCustId===c.id)h+='<span style="margin-left:auto;color:var(--primary);font-weight:700">✓</span>';
+    h+='</div>';
+  });
+  document.getElementById('custDD').innerHTML=h;
+}
+function buildItemDD(){
+  var h='';
+  MENU.forEach(function(item){
+    h+='<div class="drop-item'+(selItemId===item.id?' active-sel':'')+'" onclick="selItem(\''+item.id+'\')">';
+    h+='<span style="font-size:20px;margin-right:10px">'+item.emoji+'</span><span style="flex:1;font-size:15px">'+item.name+'</span>';
+    if(!item.isCash)h+='<span style="color:var(--text-muted);font-size:13px;margin-right:8px">'+item.price+' ብር</span>';
+    if(selItemId===item.id)h+='<span style="color:var(--primary);font-weight:700">✓</span>';
+    h+='</div>';
+  });
+  document.getElementById('itemDD').innerHTML=h;
+}
+function toggleDD(id){var el=document.getElementById(id);el.style.display=el.style.display==='none'?'block':'none';}
+function selCust(id,name){
+  selCustId=id;
+  var el=document.getElementById('selCustText');el.textContent=name;el.className='selected';
+  document.getElementById('custDD').style.display='none';
+  buildCustDD();updateTotal();
+}
+function selItem(id){
+  selItemId=id;var item=MENU.find(function(m){return m.id===id;});
+  var el=document.getElementById('selItemText');el.textContent=item.emoji+' '+item.name;el.className='selected';
+  document.getElementById('itemDD').style.display='none';
+  document.getElementById('cashSection').style.display=item.isCash?'block':'none';
+  document.getElementById('qtySection').style.display=item.isCash?'none':'block';
+  document.getElementById('totalCard').style.display='block';
+  buildItemDD();updateTotal();
+}
+function changeQty(d){var inp=document.getElementById('qtyInput');inp.value=Math.max(1,(parseInt(inp.value)||1)+d);updateTotal();}
+function updateTotal(){
+  var item=MENU.find(function(m){return m.id===selItemId;});if(!item)return;
+  var cust=getCustomers().find(function(c){return c.id===selCustId;});
+  var qty=parseInt(document.getElementById('qtyInput').value)||1;
+  var cash=parseFloat(document.getElementById('cashAmt').value)||0;
+  var unitPrice=item.isCash?cash:item.price;
+  var total=item.isCash?cash:unitPrice*qty;
+  document.getElementById('tot-cust').textContent=cust?cust.name:'—';
+  document.getElementById('tot-item').textContent=item.name;
+  document.getElementById('tot-qty').textContent=qty;
+  document.getElementById('tot-qty-row').style.display=item.isCash?'none':'flex';
+  document.getElementById('tot-unit').textContent=unitPrice+' ብር';
+  document.getElementById('tot-grand').textContent=total+' ብር';
+}
+function saveTx(){
+  if(!selCustId){alert('ደንበኛ ይምረጡ');return;}
+  if(!selItemId){alert('እቃ ይምረጡ');return;}
+  var item=MENU.find(function(m){return m.id===selItemId;});
+  var cust=getCustomers().find(function(c){return c.id===selCustId;});
+  var qty=parseInt(document.getElementById('qtyInput').value);
+  var cash=parseFloat(document.getElementById('cashAmt').value);
+  var note=document.getElementById('txNote').value.trim();
+  if(item.isCash){
+    if(isNaN(cash)||cash<=0){alert('ትክክለኛ የጥሬ ብር መጠን ያስገቡ');return;}
+  } else {
+    if(isNaN(qty)||qty<=0){alert('ትክክለኛ ብዛት ያስገቡ');return;}
+  }
+  var now=new Date();
+  var unitPrice=item.isCash?cash:item.price;
+  var total=item.isCash?cash:unitPrice*qty;
+  var txns=getTransactions();
+  txns.push({id:'t_'+Date.now(),custId:selCustId,custName:cust.name,itemId:item.id,itemName:item.name,unitPrice:unitPrice,qty:item.isCash?1:qty,total:total,isCash:item.isCash,note:note,date:now.toISOString(),ethDate:nowEth(),ethDateFull:nowEthFull()});
+  setData('transactions',txns);
+  toast('✅ '+cust.name+': '+item.name+' - '+total+' ብር');
+  selItemId=null;
+  document.getElementById('selItemText').textContent='እቃ ይምረጡ...';
+  document.getElementById('selItemText').className='placeholder';
+  document.getElementById('cashAmt').value='';
+  document.getElementById('qtyInput').value=1;
+  document.getElementById('txNote').value='';
+  document.getElementById('cashSection').style.display='none';
+  document.getElementById('qtySection').style.display='none';
+  document.getElementById('totalCard').style.display='none';
+  buildItemDD();renderDashboard();
+}
+
+// ═══ STATEMENT ═══
+var currentCustId=null;
+function openStatementNav(custId){currentCustId=custId;navTo('statement');}
+function renderStatement(){
+  var custs=getCustomers(),txns=getTransactions(),pmts=getPayments();
+  var cust=custs.find(function(c){return c.id===currentCustId;});if(!cust)return;
+  document.getElementById('stmt-title').textContent=cust.name;
+  var myTxns=txns.filter(function(t){return t.custId===currentCustId;});
+  var myPmts=pmts.filter(function(p){return p.custId===currentCustId;});
+  var b=getCustBalance(currentCustId);
+  var all=myTxns.map(function(t){return Object.assign({},t,{etype:'debt'});})
+    .concat(myPmts.map(function(p){return Object.assign({},p,{etype:'pay'});}))
+    .sort(function(a,b){return new Date(b.date)-new Date(a.date);});
+
+  var h='<div class="profile-card">';
+  if(cust.photo)h+='<img src="'+cust.photo+'" class="profile-avatar">';
+  else h+='<div class="profile-avatar-init" style="background:'+aColor(cust.name)+'">'+cust.name.charAt(0)+'</div>';
+  h+='<div style="font-size:22px;font-weight:800">'+cust.name+'</div>';
+  h+='<span class="balance-badge" style="background:'+(b.balance>0?'var(--error)':'var(--success)')+'">'+(b.balance>0?b.balance.toLocaleString()+' ብር ዕዳ':b.balance<0?Math.abs(b.balance).toLocaleString()+' ብልጫ':'ዕዳ የለም ✓')+'</span></div>';
+  h+='<div class="summary-row">';
+  h+='<div class="summary-box"><div class="summary-val" style="color:var(--error)">'+b.debt.toLocaleString()+'</div><div class="summary-lbl">ጠቅላላ ዕዳ</div></div>';
+  h+='<div class="summary-box"><div class="summary-val" style="color:var(--success)">'+b.paid.toLocaleString()+'</div><div class="summary-lbl">ጠቅላላ ክፍያ</div></div>';
+  h+='<div class="summary-box"><div class="summary-val" style="color:'+(b.balance>0?'var(--error)':'var(--success)')+'">'+b.balance.toLocaleString()+'</div><div class="summary-lbl">ቀሪ ዕዳ</div></div>';
+  h+='</div>';
+  h+='<button class="btn-success" style="width:100%;margin-bottom:16px" onclick="openPayModal()">💳 ክፍያ ምዝግብ</button>';
+  h+='<div class="section-title">የዕዳ እና ክፍያ ታሪክ</div>';
+  if(all.length===0)h+='<div style="text-align:center;padding:40px;color:var(--text-muted)">ምንም ዕዳ ወይም ክፍያ የለም</div>';
+  all.forEach(function(e){
+    if(e.etype==='debt'){
+      h+='<div class="tx-card"><div class="tx-dot" style="background:var(--error)"></div>';
+      h+='<div class="tx-info"><div class="tx-name">'+e.itemName+'</div>';
+      if(!e.isCash)h+='<div class="tx-meta">'+e.qty+'x '+e.unitPrice+' ብር</div>';
+      h+='<div class="tx-meta">📅 '+(e.ethDateFull||e.ethDate)+'</div>';
+      if(e.note)h+='<div class="tx-meta">📝 '+e.note+'</div>';
+      h+='</div><div class="tx-amt" style="color:var(--error)">+'+e.total+' ብር</div>';
+      h+='<button class="del-btn" onclick="delTx(\''+e.id+'\')">🗑️</button></div>';
+    } else {
+      h+='<div class="tx-card" style="border-left:3px solid var(--success)"><div class="tx-dot" style="background:var(--success)"></div>';
+      h+='<div class="tx-info"><div class="tx-name" style="color:var(--success)">ክፍያ</div>';
+      h+='<div class="tx-meta">📅 '+(e.ethDateFull||e.ethDate||ethStrFull(new Date(e.date)))+'</div>';
+      if(e.note)h+='<div class="tx-meta">📝 '+e.note+'</div>';
+      h+='</div><div class="tx-amt" style="color:var(--success)">-'+e.amount+' ብር</div>';
+      h+='<button class="del-btn" onclick="delPay(\''+e.id+'\')">🗑️</button></div>';
+    }
+  });
+  document.getElementById('stmt-content').innerHTML=h;
+}
+
+function delTx(id){
+  var tx=getTransactions().find(function(t){return t.id===id;});if(!tx)return;
+  if(!confirm('⚠️ '+tx.itemName+' ('+tx.total+' ብር) ዕዳ ሰርዝ?'))return;
+  _lastDeleted=tx;_lastDeleteType='tx';
+  setData('transactions',getTransactions().filter(function(t){return t.id!==id;}));
+  renderStatement();renderDashboard();
+  showUndo('🗑️ '+tx.itemName+' ተሰርዟል');
+}
+function delPay(id){
+  var p=getPayments().find(function(x){return x.id===id;});if(!p)return;
+  if(!confirm('⚠️ '+p.amount+' ብር ክፍያ ሰርዝ?'))return;
+  _lastDeleted=p;_lastDeleteType='pay';
+  setData('payments',getPayments().filter(function(x){return x.id!==id;}));
+  renderStatement();renderDashboard();
+  showUndo('🗑️ '+p.amount+' ብር ክፍያ ተሰርዟል');
+}
+function openPayModal(){
+  var b=getCustBalance(currentCustId);
+  var cust=getCustomers().find(function(c){return c.id===currentCustId;});
+  document.getElementById('payModalSub').textContent=cust.name+' - ቀሪ: '+b.balance.toLocaleString()+' ብር';
+  document.getElementById('payAmt').value='';
+  document.getElementById('payNote').value='';
+  openModal('addPayModal');
+}
+function savePayment(){
+  var amt=parseFloat(document.getElementById('payAmt').value);
+  if(isNaN(amt)||amt<=0){alert('ትክክለኛ የክፍያ መጠን ያስገቡ');return;}
+  var note=document.getElementById('payNote').value.trim();
+  var cust=getCustomers().find(function(c){return c.id===currentCustId;});
+  var now=new Date();var pmts=getPayments();
+  pmts.push({id:'p_'+Date.now(),custId:currentCustId,custName:cust.name,amount:amt,note:note,date:now.toISOString(),ethDate:nowEth(),ethDateFull:nowEthFull()});
+  setData('payments',pmts);
+  closeModal('addPayModal');
+  renderStatement();renderDashboard();
+  toast('✅ '+amt+' ብር ክፍያ ተመዝግቧል');
+}
+
+// ═══ REPORTS ═══
+function renderReports(){
+  document.getElementById('rep-date').textContent=nowEthFull();
+  var txns=getTransactions(),pmts=getPayments(),custs=getCustomers();
+  var now=new Date(),todayE=toEthDate(now);
+  var totalDebt=0,todayDebt=0,monthDebt=0;
+  txns.forEach(function(t){
+    totalDebt+=t.total;var d=toEthDate(new Date(t.date));
+    if(d.day===todayE.day&&d.month===todayE.month&&d.year===todayE.year)todayDebt+=t.total;
+    if(d.month===todayE.month&&d.year===todayE.year)monthDebt+=t.total;
+  });
+  var totalPaid=pmts.reduce(function(s,p){return s+p.amount;},0);
+  var outstanding=totalDebt-totalPaid;
+  var topName='—',topAmt=0;
+  custs.forEach(function(c){
+    var b=getCustBalance(c.id);
+    if(b.balance>topAmt){topAmt=b.balance;topName=c.name;}
+  });
+  var h='<div class="hero-card" style="text-align:center"><div class="hero-label">ያልተከፈለ ቀሪ ዕዳ</div><div class="hero-amount">'+outstanding.toLocaleString()+' ብር</div></div>';
+  var cards=[['📅','የዛሬ ዕዳ',todayDebt,'var(--warning)'],['📆','የወሩ ዕዳ',monthDebt,'var(--info)'],['💸','ጠቅላላ ዕዳ',totalDebt,'var(--error)'],['✅','ጠቅላላ ክፍያ',totalPaid,'var(--success)'],['📝','ግዢ ቁጥር',txns.length,'var(--primary)'],['👥','ደንበኞች',custs.length,'#7d3c98']];
+  h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">';
+  cards.forEach(function(c){h+='<div class="card" style="border-left:4px solid '+c[3]+'"><div style="font-size:20px">'+c[0]+'</div><div style="font-size:17px;font-weight:800;color:'+c[3]+';margin-top:4px">'+c[2].toLocaleString()+'</div><div style="font-size:12px;color:var(--text-muted);margin-top:2px">'+c[1]+'</div></div>';});
+  h+='</div>';
+  if(topAmt>0)h+='<div class="card" style="border-left:4px solid var(--error)"><div style="font-size:13px;color:var(--text-muted)">🏅 ትልቁ ዕዳ ያለበት</div><div style="font-size:18px;font-weight:800;margin-top:4px">'+topName+'</div><div style="color:var(--error);font-weight:700">'+topAmt.toLocaleString()+' ብር</div></div>';
+  h+='<div class="card"><div class="section-title">💰 ዕዳ vs ክፍያ</div>';
+  h+='<div class="compare-bar"><div class="compare-seg" style="flex:'+(totalDebt||1)+';background:var(--error)">ዕዳ</div>';
+  h+='<div class="compare-seg" style="flex:'+(totalPaid||0.001)+';background:var(--success)">'+(totalPaid>0?'ክፍያ':'')+'</div></div>';
+  h+='<div style="display:flex;justify-content:space-between"><span style="font-size:13px;color:var(--error);font-weight:600">ዕዳ: '+totalDebt.toLocaleString()+' ብር</span><span style="font-size:13px;color:var(--success);font-weight:600">ክፍያ: '+totalPaid.toLocaleString()+' ብር</span></div></div>';
+  document.getElementById('rep-content').innerHTML=h;
+}
+
+// ═══ SETTINGS ═══
+function renderSettings(){
+  var cfg=getKV('tg_cfg',{token:'',chatId:''});
+  document.getElementById('cfg-token').value=cfg.token||'';
+  document.getElementById('cfg-chatid').value=cfg.chatId||'';
+  var lastSent=getKV('tg_last_sent',null);
+  document.getElementById('last-sent-text').textContent=lastSent?('የተላከው: '+lastSent):'ገና አልተላከም';
+  document.getElementById('tg-status-badge').innerHTML='';
+}
+function saveTelegramCfg(){
+  var token=document.getElementById('cfg-token').value.trim();
+  var chatId=document.getElementById('cfg-chatid').value.trim();
+  if(!token||!chatId){alert('Token እና Chat ID ሁለቱም ያስፈልጋሉ');return;}
+  setKV('tg_cfg',{token:token,chatId:chatId});
+  toast('✅ ቅንብሮች ተቀምጠዋል');
+}
+function showTgBadge(msg,type){
+  var el=document.getElementById('tg-status-badge');
+  if(el)el.innerHTML='<span class="tg-status '+type+'">'+msg+'</span>';
+}
+
+// ═══ TELEGRAM ═══
+async function sendTelegramMsg(text){
+  var cfg=getKV('tg_cfg',{token:'',chatId:''});
+  if(!cfg.token||!cfg.chatId)return{ok:false};
+  try{
+    var r=await fetch('https://api.telegram.org/bot'+cfg.token+'/sendMessage',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({chat_id:cfg.chatId,text:text,parse_mode:'HTML'})
+    });
+    return await r.json();
+  }catch(e){return{ok:false};}
+}
+async function testTelegram(){
+  showTgBadge('⏳ በመላክ ላይ...','idle');
+  saveTelegramCfg();
+  var res=await sendTelegramMsg('🧪 <b>ጄሪ ቡና - ሙከራ</b>\n\n✅ Telegram ቅንብር ሰርቷል!\n📅 '+nowEthFull()+'\n\n🐭☕');
+  if(res&&res.ok){showTgBadge('✅ ሙከራ ተሳክቷል!','ok');toast('✅ Telegram ሙከራ ተሳክቷል!');}
+  else{showTgBadge('❌ አልተሳካም','err');toast('❌ Telegram ስህተት');}
+}
+function buildReport(){
+  var txns=getTransactions(),pmts=getPayments(),custs=getCustomers();
+  var now=new Date(),todayE=toEthDate(now);
+  var totalDebt=0,todayDebt=0,monthDebt=0;
+  txns.forEach(function(t){
+    totalDebt+=t.total;var d=toEthDate(new Date(t.date));
+    if(d.day===todayE.day&&d.month===todayE.month&&d.year===todayE.year)todayDebt+=t.total;
+    if(d.month===todayE.month&&d.year===todayE.year)monthDebt+=t.total;
+  });
+  var totalPaid=pmts.reduce(function(s,p){return s+p.amount;},0);
+  var topName='—',topAmt=0;
+  custs.forEach(function(c){
+    var b=getCustBalance(c.id);
+    if(b.balance>topAmt){topAmt=b.balance;topName=c.name;}
+  });
+  var msg='🐭☕ <b>ጄሪ ቡና - ዕለታዊ ሪፖርት</b>\n━━━━━━━━━━━━━━━\n';
+  msg+='📅 '+nowEthFull()+'\n\n';
+  msg+='💰 <b>ያልተከፈለ ዕዳ:</b> '+(totalDebt-totalPaid).toLocaleString()+' ብር\n';
+  msg+='📋 <b>ጠቅላላ ዕዳ:</b> '+totalDebt.toLocaleString()+' ብር\n';
+  msg+='✅ <b>ጠቅላላ ክፍያ:</b> '+totalPaid.toLocaleString()+' ብር\n';
+  msg+='📅 <b>የዛሬ ዕዳ:</b> '+todayDebt.toLocaleString()+' ብር\n';
+  msg+='📆 <b>የወሩ ዕዳ:</b> '+monthDebt.toLocaleString()+' ብር\n';
+  msg+='👥 <b>ደንበኞች:</b> '+custs.length+'\n';
+  if(topAmt>0)msg+='🏅 <b>ትልቁ ዕዳ:</b> '+topName+' ('+topAmt.toLocaleString()+' ብር)\n';
+  msg+='━━━━━━━━━━━━━━━\n— ጄሪ ቡና 🐭☕';
+  return msg;
+}
+async function sendManualReport(){
+  var cfg=getKV('tg_cfg',{token:'',chatId:''});
+  if(!cfg.token||!cfg.chatId){toast('❌ Telegram ቅንብር ያስቀምጡ');navTo('settings');return;}
+  toast('⏳ ሪፖርት በመላክ ላይ...');
+  var res=await sendTelegramMsg(buildReport());
+  if(res&&res.ok){
+    var s=nowEthFull();setKV('tg_last_sent',s);
+    document.getElementById('last-sent-text').textContent='የተላከው: '+s;
+    toast('✅ ሪፖርት ተላልፏል!');
+  } else {
+    toast('❌ ሪፖርት አልተላከም');
+  }
+}
+
+// ═══ MIDNIGHT SCHEDULER ═══
+function tryMidnightReport(){
+  var cfg=getKV('tg_cfg',{token:'',chatId:''});
+  if(!cfg.token||!cfg.chatId)return;
+  var today=new Date().toDateString();
+  if(getKV('tg_last_fired','')=== today)return;
+  setKV('tg_last_fired',today);
+  sendTelegramMsg(buildReport()).then(function(res){
+    if(res&&res.ok)setKV('tg_last_sent',nowEthFull());
+  });
+}
+function checkMidnight(){
+  var h=new Date().getHours(),m=new Date().getMinutes();
+  if(h===0&&m<3)tryMidnightReport();
+}
+setInterval(checkMidnight,30000);
+// Also check on open if between midnight and 6am
+(function(){
+  var h=new Date().getHours();
+  if(h>=0&&h<6)tryMidnightReport();
+})();
+document.addEventListener('visibilitychange',function(){
+  if(document.visibilityState==='visible')checkMidnight();
+});
+
+// ═══ BACKUP ═══
+function exportBackup(){
+  var data={customers:getCustomers(),transactions:getTransactions(),payments:getPayments(),exportedAt:new Date().toISOString(),ethDate:nowEthFull()};
+  var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;a.download='jeri-buna-backup-'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();URL.revokeObjectURL(url);
+  toast('✅ ምትኬ ተቀምጧል!');
+}
+function importBackup(input){
+  if(!input.files||!input.files[0])return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      var data=JSON.parse(e.target.result);
+      if(!data.customers||!data.transactions||!data.payments){alert('❌ ትክክለኛ ምትኬ ፋይል አይደለም');return;}
+      if(confirm('ምትኬ ጫን? የአሁኑ መረጃ ይተካል!')){
+        setData('customers',data.customers);
+        setData('transactions',data.transactions);
+        setData('payments',data.payments);
+        renderDashboard();
+        toast('✅ ምትኬ ተጭኗል! '+data.customers.length+' ደንበኞች');
+      }
+    } catch(err){alert('❌ ፋይሉ ትክክለኛ አይደለም');}
+  };
+  reader.readAsText(input.files[0]);
+}
+
+// ═══ RESET ═══
+function openResetModal(){
+  document.getElementById('pinInput').value='';
+  openModal('pinModal');
+}
+function confirmReset(){
+  var pin=document.getElementById('pinInput').value;
+  if(pin!=='1234'){toast('❌ PIN ትክክለኛ አይደለም!');document.getElementById('pinInput').value='';return;}
+  closeModal('pinModal');
+  setData('customers',[]);setData('transactions',[]);setData('payments',[]);
+  setKV('tg_last_sent',null);setKV('tg_last_fired','');
+  renderDashboard();renderCustomers();
+  toast('🗑️ ሁሉም መረጃ ተሰርዟል');
+}
+
+// ═══ INIT ═══
+history.replaceState({screen:'dashboard'},'','#dashboard');
+renderDashboard();
+autoBackup();
+</script>
+</body>
+</html>
