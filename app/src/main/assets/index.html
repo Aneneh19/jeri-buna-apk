@@ -407,7 +407,7 @@ function autoBackup(){
   var data={customers:getCustomers(),transactions:getTransactions(),payments:getPayments(),ts:Date.now(),ethDate:nowEthFull()};
   localStorage.setItem('auto_backup',JSON.stringify(data));
 }
-setInterval(autoBackup,6*60*60*1000);
+try{setInterval(autoBackup,6*60*60*1000);}catch(e){}
 
 // ═══ MENU ═══
 var MENU=[
@@ -872,34 +872,35 @@ async function sendTelegramMsg(text){
   var cfg=getKV('tg_cfg',{token:'',chatId:''});
   if(!cfg.token||!cfg.chatId)return{ok:false};
   try{
-    var r=await fetch('https://api.telegram.org/bot'+cfg.token+'/sendMessage',{
+    var token=cfg.token.trim();
+    var chatId=cfg.chatId.trim();
+    var r=await fetch('https://api.telegram.org/bot'+token+'/sendMessage',{
       method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({chat_id:cfg.chatId,text:text,parse_mode:'HTML'})
+      body:JSON.stringify({chat_id:chatId,text:text})
     });
     return await r.json();
-  }catch(e){return{ok:false};}
+  }catch(e){return{ok:false,description:e.message};}
 }
 async function testTelegram(){
   saveTelegramCfg();
   var cfg=getKV('tg_cfg',{token:'',chatId:''});
-  if(!cfg.token||!cfg.chatId){
-    showTgBadge('❌ Token እና Chat ID ያስፈልጋሉ','err');
-    return;
-  }
+  if(!cfg.token){showTgBadge('❌ Bot Token ያስፈልጋል','err');return;}
+  if(!cfg.chatId){showTgBadge('❌ Chat ID ያስፈልጋል','err');return;}
   showTgBadge('⏳ በመላክ ላይ...','idle');
-  var res=await sendTelegramMsg('🧪 <b>ጄሪ ቡና - ሙከራ</b>
-
-✅ Telegram ሰርቷል!
-📅 '+nowEthFull()+'
-
-🐭☕');
-  if(res&&res.ok){
-    showTgBadge('✅ ሙከራ ተሳክቷል!','ok');
-    toast('✅ Telegram ሙከራ ተሳክቷል!');
-  } else {
-    var errMsg=res&&res.description?res.description:'ስህተት - Token ወይም Chat ID ያረጋግጡ';
-    showTgBadge('❌ '+errMsg,'err');
-    toast('❌ Telegram ስህተት');
+  try{
+    var url='https://api.telegram.org/bot'+cfg.token.trim()+'/sendMessage';
+    var body=JSON.stringify({chat_id:cfg.chatId.trim(),text:'🧪 ጄሪ ቡና - ሙከራ '+nowEthFull()});
+    var r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:body});
+    var res=await r.json();
+    if(res&&res.ok){
+      showTgBadge('✅ ሙከራ ተሳክቷል!','ok');
+      toast('✅ Telegram ሙከራ ተሳክቷል!');
+    } else {
+      var err=res&&res.description?res.description:JSON.stringify(res);
+      showTgBadge('❌ '+err,'err');
+    }
+  }catch(e){
+    showTgBadge('❌ Network error: '+e.message,'err');
   }
 }
 function buildReport(){
@@ -917,18 +918,24 @@ function buildReport(){
     var b=getCustBalance(c.id);
     if(b.balance>topAmt){topAmt=b.balance;topName=c.name;}
   });
-  var msg='🐭☕ <b>ጄሪ ቡና - ዕለታዊ ሪፖርት</b>\n━━━━━━━━━━━━━━━\n';
-  msg+='📅 '+nowEthFull()+'\n\n';
-  msg+='💰 <b>ያልተከፈለ ዕዳ:</b> '+(totalDebt-totalPaid).toLocaleString()+' ብር\n';
-  msg+='📋 <b>ጠቅላላ ዕዳ:</b> '+totalDebt.toLocaleString()+' ብር\n';
-  msg+='✅ <b>ጠቅላላ ክፍያ:</b> '+totalPaid.toLocaleString()+' ብር\n';
-  msg+='📅 <b>የዛሬ ዕዳ:</b> '+todayDebt.toLocaleString()+' ብር\n';
-  msg+='📆 <b>የወሩ ዕዳ:</b> '+monthDebt.toLocaleString()+' ብር\n';
-  msg+='👥 <b>ደንበኞች:</b> '+custs.length+'\n';
-  if(topAmt>0)msg+='🏅 <b>ትልቁ ዕዳ:</b> '+topName+' ('+topAmt.toLocaleString()+' ብር)\n';
-  msg+='━━━━━━━━━━━━━━━\n— ጄሪ ቡና 🐭☕';
-  return msg;
+  var lines=[
+    '🐭☕ ጄሪ ቡና - ዕለታዊ ሪፖርት',
+    '━━━━━━━━━━━━━━━',
+    '📅 '+nowEthFull(),
+    '',
+    '💰 ያልተከፈለ ዕዳ: '+(totalDebt-totalPaid).toLocaleString()+' ብር',
+    '📋 ጠቅላላ ዕዳ: '+totalDebt.toLocaleString()+' ብር',
+    '✅ ጠቅላላ ክፍያ: '+totalPaid.toLocaleString()+' ብር',
+    '📅 የዛሬ ዕዳ: '+todayDebt.toLocaleString()+' ብር',
+    '📆 የወሩ ዕዳ: '+monthDebt.toLocaleString()+' ብር',
+    '👥 ደንበኞች: '+custs.length
+  ];
+  if(topAmt>0)lines.push('🏅 ትልቁ ዕዳ: '+topName+' ('+topAmt.toLocaleString()+' ብር)');
+  lines.push('━━━━━━━━━━━━━━━');
+  lines.push('— ጄሪ ቡና 🐭☕');
+  return lines.join('\n');
 }
+
 async function sendManualReport(){
   var cfg=getKV('tg_cfg',{token:'',chatId:''});
   if(!cfg.token||!cfg.chatId){toast('❌ Telegram ቅንብር ያስቀምጡ');navTo('settings');return;}
@@ -960,10 +967,12 @@ function checkMidnight(){
 }
 setInterval(checkMidnight,30000);
 // Also check on open if between midnight and 6am
-(function(){
-  var h=new Date().getHours();
-  if(h>=0&&h<6)tryMidnightReport();
-})();
+setTimeout(function(){
+  try{
+    var h=new Date().getHours();
+    if(h>=0&&h<6)tryMidnightReport();
+  }catch(e){}
+},3000);
 document.addEventListener('visibilitychange',function(){
   if(document.visibilityState==='visible')checkMidnight();
 });
@@ -1105,9 +1114,9 @@ function confirmReset(){
 }
 
 // ═══ INIT ═══
-history.replaceState({screen:'dashboard'},'','#dashboard');
-renderDashboard();
-autoBackup();
+try{history.replaceState({screen:'dashboard'},'','#dashboard');}catch(e){}
+try{renderDashboard();}catch(e){document.getElementById('dash-content').innerHTML='<div style="padding:20px;color:red">Error: '+e.message+'</div>';}
+try{autoBackup();}catch(e){}
 </script>
 </body>
 </html>
