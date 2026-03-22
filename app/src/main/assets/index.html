@@ -961,14 +961,12 @@ function buildReport(){
   txns.forEach(function(t){totalDebt+=t.total;});
   totalPaid=pmts.reduce(function(s,p){return s+p.amount;},0);
   var outstanding=totalDebt-totalPaid;
+  var NL='\n';
+  var SEP='\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501';
 
-  var msg='🐭☕ <b>ጄሪ ቡና - ዕለታዊ ሪፖርት</b>
-';
-  msg+='📅 '+nowEthFull()+'
-';
-  msg+='━━━━━━━━━━━━━━━
-
-';
+  var msg='🐭☕ <b>ጄሪ ቡና - ዕለታዊ ሪፖርት</b>'+NL;
+  msg+='📅 '+nowEthFull()+NL;
+  msg+=SEP+NL+NL;
 
   var grandBalance=0;
   var custNum=0;
@@ -991,29 +989,19 @@ function buildReport(){
       groups[t.itemName].total+=t.total;
     });
 
-    msg+=custNum+'. <b>'+c.name+'</b>
-';
+    msg+=custNum+'. <b>'+c.name+'</b>'+NL;
     Object.keys(groups).forEach(function(key){
       var g=groups[key];
-      var pad=Array(Math.max(1,18-key.length-String(g.qty).length)).join(' ');
-      msg+='   ▸ '+key+' ×'+g.qty+pad+g.total.toLocaleString()+' ብር
-';
+      msg+='   ▸ '+key+' ×'+g.qty+'     '+g.total.toLocaleString()+' ብር'+NL;
     });
-    msg+='   ዕዳ: '+custDebt.toLocaleString()+' | ክፍያ: '+custPaid.toLocaleString()+'    <b>'+custBalance.toLocaleString()+' ብር</b>
-
-';
+    msg+='   ዕዳ: '+custDebt.toLocaleString()+' | ክፍያ: '+custPaid.toLocaleString()+'    <b>'+custBalance.toLocaleString()+' ብር</b>'+NL+NL;
   });
 
-  msg+='━━━━━━━━━━━━━━━
-';
-  msg+='📊 <b>ጠቅላላ ቀሪ ዕዳ    '+grandBalance.toLocaleString()+' ብር</b>
-';
-  msg+='💸 ጠቅላላ ዕዳ: '+totalDebt.toLocaleString()+' | ✅ ክፍያ: '+totalPaid.toLocaleString()+'
-';
-  msg+='👥 ደንበኞች: '+custs.length+'
-';
-  msg+='━━━━━━━━━━━━━━━
-— ጄሪ ቡና 🐭☕';
+  msg+=SEP+NL;
+  msg+='📊 <b>ጠቅላላ ቀሪ ዕዳ    '+grandBalance.toLocaleString()+' ብር</b>'+NL;
+  msg+='💸 ጠቅላላ ዕዳ: '+totalDebt.toLocaleString()+' | ✅ ክፍያ: '+totalPaid.toLocaleString()+NL;
+  msg+='👥 ደንበኞች: '+custs.length+NL;
+  msg+=SEP+NL+'— ጄሪ ቡና 🐭☕';
   return msg;
 }
 
@@ -1201,9 +1189,25 @@ function confirmReset(){
   toast('🗑️ ሁሉም መረጃ ተሰርዟል');
 }
 
+// ═══ GLOBAL ERROR HANDLER ═══
+window.onerror = function(msg, src, line, col, err){
+  var errDiv = document.getElementById('dash-content');
+  if(errDiv){
+    errDiv.innerHTML = '<div style="padding:20px;background:#fff;border-radius:12px;margin:16px;">'
+      + '<div style="color:red;font-weight:800;font-size:16px;margin-bottom:8px">⚠️ Error</div>'
+      + '<div style="font-size:12px;color:#333">' + msg + '</div>'
+      + '<div style="font-size:11px;color:#666;margin-top:4px">Line: ' + line + '</div>'
+      + '</div>';
+  }
+  return true;
+};
+
 // ═══ INIT ═══
 try{history.replaceState({screen:'dashboard'},'','#dashboard');}catch(e){}
-try{renderDashboard();}catch(e){document.getElementById('dash-content').innerHTML='<div style="padding:20px;color:red">Error: '+e.message+'</div>';}
+try{renderDashboard();}catch(e){
+  var errDiv=document.getElementById('dash-content');
+  if(errDiv)errDiv.innerHTML='<div style="padding:20px;color:red;font-size:14px">Error: '+e.message+'</div>';
+}
 try{autoBackup();}catch(e){}
 </script>
 </body>
