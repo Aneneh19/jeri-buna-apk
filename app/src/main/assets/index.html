@@ -816,131 +816,87 @@ function savePayment(){
 }
 
 // ═══ REPORTS ═══
-function renderReports(){
-  document.getElementById('rep-date').textContent=nowEthFull();
+function buildCustomerReport(){
   var txns=getTransactions(),pmts=getPayments(),custs=getCustomers();
   var totalDebt=0,totalPaid=0;
   txns.forEach(function(t){totalDebt+=t.total;});
   totalPaid=pmts.reduce(function(s,p){return s+p.amount;},0);
   var outstanding=totalDebt-totalPaid;
-  var h='';
+  return {txns:txns,pmts:pmts,custs:custs,totalDebt:totalDebt,totalPaid:totalPaid,outstanding:outstanding};
+}
 
-  // Hero
-  h+='<div class="hero-card" style="text-align:center">';
+function renderReports(){
+  document.getElementById('rep-date').textContent=nowEthFull();
+  var d=buildCustomerReport();
+  var txns=d.txns,pmts=d.pmts,custs=d.custs;
+
+  var h='<div class="hero-card" style="text-align:center">';
   h+='<div class="hero-label">ያልተከፈለ ቀሪ ዕዳ</div>';
-  h+='<div class="hero-amount">'+outstanding.toLocaleString()+' ብር</div>';
-  h+='<div class="hero-row" style="justify-content:center;gap:24px">';
-  h+='<div class="hero-stat"><label>ጠቅላላ ዕዳ</label><p>'+totalDebt.toLocaleString()+' ብር</p></div>';
-  h+='<div class="hero-stat"><label>ጠቅላላ ክፍያ</label><p style="color:var(--accent-light)">'+totalPaid.toLocaleString()+' ብር</p></div>';
+  h+='<div class="hero-amount">'+d.outstanding.toLocaleString()+' ብር</div>';
+  h+='<div class="hero-row" style="justify-content:center;gap:30px">';
+  h+='<div class="hero-stat"><label>ጠቅላላ ዕዳ</label><p>'+d.totalDebt.toLocaleString()+' ብር</p></div>';
+  h+='<div class="hero-stat"><label>ጠቅላላ ክፍያ</label><p style="color:var(--accent-light)">'+d.totalPaid.toLocaleString()+' ብር</p></div>';
   h+='<div class="hero-stat"><label>ደንበኞች</label><p>'+custs.length+'</p></div>';
   h+='</div></div>';
 
-  // Daily report section
-  var dailyKey='daily_report_'+new Date().toDateString();
-  var savedReport=getKV(dailyKey,null);
-
   h+='<div class="card">';
-  h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">';
-  h+='<div class="section-title" style="margin-bottom:0">📋 ዕለታዊ ሪፖርት</div>';
-  h+='<button onclick="resetDailyReport()" style="background:#fff0f0;border:1px solid #ffcccc;color:var(--error);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">🗑️ አጽዳ</button>';
-  h+='</div>';
+  h+='<div class="section-title">📋 የደንበኞች ዝርዝር ሪፖርት</div>';
 
-  if(!savedReport){
-    // Build fresh daily report
-    var grandBalance=0;
-    var custNum=0;
-    var reportLines='';
+  var grandBalance=0;
+  var custNum=0;
 
-    custs.forEach(function(c){
-      var myTxns=txns.filter(function(t){return t.custId===c.id;});
-      var myPmts=pmts.filter(function(p){return p.custId===c.id;});
-      if(myTxns.length===0)return;
-      custNum++;
+  custs.forEach(function(c){
+    var myTxns=txns.filter(function(t){return t.custId===c.id;});
+    var myPmts=pmts.filter(function(p){return p.custId===c.id;});
+    if(myTxns.length===0)return;
+    custNum++;
 
-      var custDebt=myTxns.reduce(function(s,t){return s+t.total;},0);
-      var custPaid=myPmts.reduce(function(s,p){return s+p.amount;},0);
-      var custBalance=custDebt-custPaid;
-      grandBalance+=custBalance;
+    var custDebt=myTxns.reduce(function(s,t){return s+t.total;},0);
+    var custPaid=myPmts.reduce(function(s,p){return s+p.amount;},0);
+    var custBalance=custDebt-custPaid;
+    grandBalance+=custBalance;
 
-      // Group items
-      var groups={};
-      myTxns.forEach(function(t){
-        if(!groups[t.itemName])groups[t.itemName]={qty:0,total:0};
-        groups[t.itemName].qty+=(t.qty||1);
-        groups[t.itemName].total+=t.total;
-      });
-
-      reportLines+='<div style="margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border-light);">';
-      reportLines+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">';
-      reportLines+='<div style="width:24px;height:24px;background:var(--primary);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;flex-shrink:0;">'+custNum+'</div>';
-      reportLines+='<div style="font-size:15px;font-weight:800;flex:1;">'+c.name+'</div>';
-      reportLines+='</div>';
-
-      Object.keys(groups).forEach(function(key){
-        var g=groups[key];
-        reportLines+='<div style="display:flex;justify-content:space-between;padding:3px 10px;font-size:13px;">';
-        reportLines+='<span style="color:var(--text-sec)">▸ '+key+' ×'+g.qty+'</span>';
-        reportLines+='<span style="font-weight:700;">'+g.total.toLocaleString()+' ብር</span>';
-        reportLines+='</div>';
-      });
-
-      reportLines+='<div style="display:flex;justify-content:space-between;margin-top:6px;padding:5px 10px;background:var(--surface-warm);border-radius:8px;font-size:12px;">';
-      reportLines+='<span style="color:var(--text-muted)">ዕዳ: <b style="color:var(--error)">'+custDebt.toLocaleString()+'</b> | ክፍያ: <b style="color:var(--success)">'+custPaid.toLocaleString()+'</b></span>';
-      reportLines+='<span style="font-weight:800;color:'+(custBalance>0?'var(--error)':'var(--success)')+'">'+custBalance.toLocaleString()+' ብር</span>';
-      reportLines+='</div>';
-      reportLines+='</div>';
+    var groups={};
+    myTxns.forEach(function(t){
+      if(!groups[t.itemName])groups[t.itemName]={qty:0,total:0};
+      groups[t.itemName].qty+=(t.qty||1);
+      groups[t.itemName].total+=t.total;
     });
 
-    if(custNum===0){
-      h+='<div style="text-align:center;padding:30px;color:var(--text-muted)">ዛሬ ምንም ዕዳ የለም</div>';
-    } else {
-      h+=reportLines;
-      // Grand total
-      h+='<div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:var(--primary);border-radius:10px;margin-top:4px;">';
-      h+='<span style="color:#fff;font-size:15px;font-weight:700;">📊 ጠቅላላ ቀሪ ዕዳ</span>';
-      h+='<span style="color:var(--accent-light);font-size:20px;font-weight:900;">'+grandBalance.toLocaleString()+' ብር</span>';
-      h+='</div>';
-      // Save for today
-      setKV(dailyKey, {html:reportLines, total:grandBalance, date:nowEthFull()});
-    }
-  } else {
-    // Show saved report
-    h+='<div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">📅 '+savedReport.date+'</div>';
-    h+=savedReport.html;
-    h+='<div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:var(--primary);border-radius:10px;margin-top:4px;">';
-    h+='<span style="color:#fff;font-size:15px;font-weight:700;">📊 ጠቅላላ ቀሪ ዕዳ</span>';
-    h+='<span style="color:var(--accent-light);font-size:20px;font-weight:900;">'+savedReport.total.toLocaleString()+' ብር</span>';
+    h+='<div style="margin-bottom:14px;padding-bottom:14px;border-bottom:2px solid var(--border-light);">';
+    h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">';
+    h+='<div style="width:26px;height:26px;background:var(--primary);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;flex-shrink:0;">'+custNum+'</div>';
+    h+='<div style="font-size:16px;font-weight:800;">'+c.name+'</div>';
     h+='</div>';
-  }
-  h+='</div>';
 
-  // Bar chart
-  h+='<div class="card"><div class="section-title">💰 ዕዳ vs ክፍያ</div>';
-  h+='<div class="compare-bar"><div class="compare-seg" style="flex:'+(totalDebt||1)+';background:var(--error)">ዕዳ</div>';
-  h+='<div class="compare-seg" style="flex:'+(totalPaid||0.001)+';background:var(--success)">'+(totalPaid>0?'ክፍያ':'')+'</div></div>';
-  h+='<div style="display:flex;justify-content:space-between"><span style="font-size:13px;color:var(--error);font-weight:600">ዕዳ: '+totalDebt.toLocaleString()+' ብር</span><span style="font-size:13px;color:var(--success);font-weight:600">ክፍያ: '+totalPaid.toLocaleString()+' ብር</span></div></div>';
+    Object.keys(groups).forEach(function(key){
+      var g=groups[key];
+      h+='<div style="display:flex;justify-content:space-between;padding:3px 12px;font-size:13px;">';
+      h+='<span style="color:var(--text-sec)">▸ '+key+' ×'+g.qty+'</span>';
+      h+='<span style="font-weight:700;">'+g.total.toLocaleString()+' ብር</span>';
+      h+='</div>';
+    });
+
+    h+='<div style="display:flex;justify-content:space-between;margin-top:6px;padding:6px 12px;background:var(--surface-warm);border-radius:8px;font-size:13px;">';
+    h+='<span style="color:var(--text-muted)">ዕዳ: <b style="color:var(--error)">'+custDebt.toLocaleString()+'</b>  ክፍያ: <b style="color:var(--success)">'+custPaid.toLocaleString()+'</b></span>';
+    h+='<span style="font-weight:800;color:'+(custBalance>0?'var(--error)':'var(--success)')+'">'+custBalance.toLocaleString()+' ብር</span>';
+    h+='</div>';
+    h+='</div>';
+  });
+
+  if(custNum===0){
+    h+='<div style="text-align:center;padding:30px;color:var(--text-muted)">ምንም ዕዳ የለም</div>';
+  }
+
+  // Grand total
+  h+='<div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:var(--primary);border-radius:10px;margin-top:4px;">';
+  h+='<span style="color:#fff;font-size:15px;font-weight:700">📊 ጠቅላላ ቀሪ ዕዳ</span>';
+  h+='<span style="color:var(--accent-light);font-size:20px;font-weight:900">'+grandBalance.toLocaleString()+' ብር</span>';
+  h+='</div>';
+  h+='</div>';
 
   document.getElementById('rep-content').innerHTML=h;
 }
-
-function resetDailyReport(){
-  var dailyKey='daily_report_'+new Date().toDateString();
-  localStorage.removeItem(dailyKey);
-  renderReports();
-  toast('🗑️ ሪፖርት ተጽዷል');
-}
-
-// Auto-clear daily report at midnight
-function clearOldReports(){
-  var today=new Date().toDateString();
-  var keys=Object.keys(localStorage);
-  keys.forEach(function(k){
-    if(k.startsWith('daily_report_')&&k!=='daily_report_'+today){
-      localStorage.removeItem(k);
-    }
-  });
-}
-clearOldReports();
 
 // ═══ SETTINGS ═══
 function renderSettings(){
@@ -1001,35 +957,64 @@ async function testTelegram(){
 }
 function buildReport(){
   var txns=getTransactions(),pmts=getPayments(),custs=getCustomers();
-  var now=new Date(),todayE=toEthDate(now);
-  var totalDebt=0,todayDebt=0,monthDebt=0;
-  txns.forEach(function(t){
-    totalDebt+=t.total;var d=toEthDate(new Date(t.date));
-    if(d.day===todayE.day&&d.month===todayE.month&&d.year===todayE.year)todayDebt+=t.total;
-    if(d.month===todayE.month&&d.year===todayE.year)monthDebt+=t.total;
-  });
-  var totalPaid=pmts.reduce(function(s,p){return s+p.amount;},0);
-  var topName='—',topAmt=0;
+  var totalDebt=0,totalPaid=0;
+  txns.forEach(function(t){totalDebt+=t.total;});
+  totalPaid=pmts.reduce(function(s,p){return s+p.amount;},0);
+  var outstanding=totalDebt-totalPaid;
+
+  var msg='🐭☕ <b>ጄሪ ቡና - ዕለታዊ ሪፖርት</b>
+';
+  msg+='📅 '+nowEthFull()+'
+';
+  msg+='━━━━━━━━━━━━━━━
+
+';
+
+  var grandBalance=0;
+  var custNum=0;
+
   custs.forEach(function(c){
-    var b=getCustBalance(c.id);
-    if(b.balance>topAmt){topAmt=b.balance;topName=c.name;}
+    var myTxns=txns.filter(function(t){return t.custId===c.id;});
+    var myPmts=pmts.filter(function(p){return p.custId===c.id;});
+    if(myTxns.length===0)return;
+    custNum++;
+
+    var custDebt=myTxns.reduce(function(s,t){return s+t.total;},0);
+    var custPaid=myPmts.reduce(function(s,p){return s+p.amount;},0);
+    var custBalance=custDebt-custPaid;
+    grandBalance+=custBalance;
+
+    var groups={};
+    myTxns.forEach(function(t){
+      if(!groups[t.itemName])groups[t.itemName]={qty:0,total:0};
+      groups[t.itemName].qty+=(t.qty||1);
+      groups[t.itemName].total+=t.total;
+    });
+
+    msg+=custNum+'. <b>'+c.name+'</b>
+';
+    Object.keys(groups).forEach(function(key){
+      var g=groups[key];
+      var pad=Array(Math.max(1,18-key.length-String(g.qty).length)).join(' ');
+      msg+='   ▸ '+key+' ×'+g.qty+pad+g.total.toLocaleString()+' ብር
+';
+    });
+    msg+='   ዕዳ: '+custDebt.toLocaleString()+' | ክፍያ: '+custPaid.toLocaleString()+'    <b>'+custBalance.toLocaleString()+' ብር</b>
+
+';
   });
-  var lines=[
-    '🐭☕ ጄሪ ቡና - ዕለታዊ ሪፖርት',
-    '━━━━━━━━━━━━━━━',
-    '📅 '+nowEthFull(),
-    '',
-    '💰 ያልተከፈለ ዕዳ: '+(totalDebt-totalPaid).toLocaleString()+' ብር',
-    '📋 ጠቅላላ ዕዳ: '+totalDebt.toLocaleString()+' ብር',
-    '✅ ጠቅላላ ክፍያ: '+totalPaid.toLocaleString()+' ብር',
-    '📅 የዛሬ ዕዳ: '+todayDebt.toLocaleString()+' ብር',
-    '📆 የወሩ ዕዳ: '+monthDebt.toLocaleString()+' ብር',
-    '👥 ደንበኞች: '+custs.length
-  ];
-  if(topAmt>0)lines.push('🏅 ትልቁ ዕዳ: '+topName+' ('+topAmt.toLocaleString()+' ብር)');
-  lines.push('━━━━━━━━━━━━━━━');
-  lines.push('— ጄሪ ቡና 🐭☕');
-  return lines.join('\n');
+
+  msg+='━━━━━━━━━━━━━━━
+';
+  msg+='📊 <b>ጠቅላላ ቀሪ ዕዳ    '+grandBalance.toLocaleString()+' ብር</b>
+';
+  msg+='💸 ጠቅላላ ዕዳ: '+totalDebt.toLocaleString()+' | ✅ ክፍያ: '+totalPaid.toLocaleString()+'
+';
+  msg+='👥 ደንበኞች: '+custs.length+'
+';
+  msg+='━━━━━━━━━━━━━━━
+— ጄሪ ቡና 🐭☕';
+  return msg;
 }
 
 async function sendManualReport(){
